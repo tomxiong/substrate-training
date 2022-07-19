@@ -1,3 +1,13 @@
+# poe pallet demo screenshots
+## Create claim:
+![Screenshot1](create_claim.png "create claim screen")
+## Revoke claim(after transfer to Bob account):
+![Screenshot2](revoke.png "revoke claim screen")
+## transfer claim:
+![Screenshot3](transfer.png "transfer screen")
+## Whole demo gif for create, transfer and revoke:
+![Screenshot4](poe_1_screenshots.gif "demo screen gif")
+
 # Substrate Node Template
 
 A fresh FRAME-based [Substrate](https://www.substrate.io/) node, ready for hacking :rocket:
