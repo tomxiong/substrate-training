@@ -1,7 +1,7 @@
 # pallet poe module 存证的创建，撤销和转移以及单元测试
 用例10个，包括正常工作路径，创建时存证已存在，撤销时存证不存在，转移存证不存证，撤销和转移时非owner等异常路径，存证数据超长
 ## 截图如下
-![unti_test_running](unti_test_running.png "unit test result")
+![unit_test_running](unit_test_running.png "unit test result")
 
 
 # Substrate 
