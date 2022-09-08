@@ -1,106 +1,53 @@
-use crate::{mock::*, Config, Error, Proofs};
+use crate::{mock::{*, self}, Config, Error, Kitties, Event};
 use frame_support::{assert_noop, assert_ok};
-use sp_runtime::BoundedVec;
+use crate::mock::*;
+use super::*;
 
 #[test]
-fn create_claim_works() {
+fn create_kitty_works() {
 	new_test_ext().execute_with(|| {
-		let claim = vec![0, 1];
-		// create claim.
-		assert_ok!(PoeModule::create_claim(Origin::signed(1), claim.clone()));
-		let bounded_claim = BoundedVec::<u8, <Test as Config>::MaxClaimLength>::try_from(claim.clone()).unwrap();
-		// Read pallet storage and assert an expected result.
-		assert_eq!(Proofs::<Test>::get(&bounded_claim),
-				   Some((1, frame_system::Pallet::<Test>::block_number())));
+		// create kitty.
+		assert_ok!(KittyModule::create(Origin::signed(1)));
+		// kitty_id = 0, owner = 1, count =1
+		assert!(Kitties::<Test>::contains_key(0));
+		// check owner has the kitty_id = 0
+		assert_eq!(KittyOwner::<Test>::get(0), Some(1));
+		// check kitties has the kitty_id = 0 too
+		let kitty = Kitties::<Test>::get(0).unwrap();
+		//assert_eq!(kitty.0, [0; 16]);
+		System::assert_has_event(mock::Event::KittyModule(Event::KittyCreated(1, 0, kitty)));		
 	});
 }
 
 #[test]
-fn creat_claim_failed_when_claim_already_exists() {
+fn transfer_kitty_works() {
 	new_test_ext().execute_with(|| {
-		let claim = vec![0, 1];
-		let _ = PoeModule::create_claim(Origin::signed(1), claim.clone());
-		assert_noop!(
-			PoeModule::create_claim(Origin::signed(1), claim.clone()),
-			Error::<Test>::ProofAlreadyExist
-		);
-	})
+		// create kitty.
+		assert_ok!(KittyModule::create(Origin::signed(1)));
+		// transfer to the second owner
+		assert_ok!(KittyModule::transfer(Origin::signed(1), 0, 2));
+
+		assert!(Kitties::<Test>::contains_key(0));
+		// check if the second owner has the kitty_id = 0
+		assert_eq!(KittyOwner::<Test>::get(0), Some(2));
+		System::assert_has_event(mock::Event::KittyModule(Event::KittyTransferred(1, 2, 0)));		
+	});
 }
 
 #[test]
-fn revoke_claim_failed_when_claim_is_too_long() {
+fn breed_kitty_works() {
 	new_test_ext().execute_with(|| {
-		let claim = vec![0; 512+1];
-		assert_noop!(
-			PoeModule::create_claim(Origin::signed(1), claim.clone()),
-			Error::<Test>::ClaimTooLong
-		);
-	})
-}
+		// create kitty.
+		assert_ok!(KittyModule::create(Origin::signed(1)));
+		assert_ok!(KittyModule::create(Origin::signed(1)));
+		assert_ok!(KittyModule::breed(Origin::signed(1), 0, 1));
 
-#[test]
-fn revoke_claim_works() {
-	new_test_ext().execute_with(|| {
-		let claim = vec![0, 1];
-		assert_ok!(PoeModule::create_claim(Origin::signed(1), claim.clone()));
-
-		assert_ok!(PoeModule::revoke_claim(Origin::signed(1), claim.clone()));
-	})
-}
-
-#[test]
-fn revoke_claim_failed_when_claim_not_exists() {
-	new_test_ext().execute_with(|| {
-		let claim = vec![0, 1];
-		assert_noop!(
-			PoeModule::revoke_claim(Origin::signed(1), claim.clone()),
-			Error::<Test>::ClaimNotExist
-		);
-	})
-}
-
-#[test]
-fn revoke_claim_failed_when_not_owner() {
-	new_test_ext().execute_with(|| {
-		let claim = vec![0, 1];
-		assert_ok!(PoeModule::create_claim(Origin::signed(1), claim.clone()));
-		assert_noop!(
-			PoeModule::revoke_claim(Origin::signed(2), claim.clone()),
-			Error::<Test>::NotClaimOwner
-		);
-	})
-}
-
-#[test]
-fn transfer_claim_works() {
-	new_test_ext().execute_with(|| {
-		let claim = vec![0, 1];
-		assert_ok!(PoeModule::create_claim(Origin::signed(1), claim.clone()));
-		assert_ok!(PoeModule::transfer_claim(Origin::signed(1), claim.clone(), 2));
-		let bounded_claim = BoundedVec::<u8, <Test as Config>::MaxClaimLength>::try_from(claim.clone()).unwrap();
-		assert_eq!(Proofs::<Test>::get(&bounded_claim), Some((2, frame_system::Pallet::<Test>::block_number())));
-	})
-}
-
-#[test]
-fn transfer_claim_failed_when_claim_not_exists() {
-	new_test_ext().execute_with(|| {
-		let claim = vec![0, 1];
-		assert_noop!(
-			PoeModule::transfer_claim(Origin::signed(1), claim.clone(), 2),
-			Error::<Test>::ClaimNotExist
-		);
-	})
-}
-
-#[test]
-fn transfer_claim_failed_when_not_owner() {
-	new_test_ext().execute_with(|| {
-		let claim = vec![0, 1];
-		assert_ok!(PoeModule::create_claim(Origin::signed(1), claim.clone()));
-		assert_noop!(
-			PoeModule::transfer_claim(Origin::signed(2), claim.clone(), 1),
-			Error::<Test>::NotClaimOwner
-		);
-	})
+		// check if kitty_id in 0,1,2 and owner is 1
+		assert!(Kitties::<Test>::contains_key(2));
+		assert_eq!(KittyOwner::<Test>::get(0), Some(1));
+		assert_eq!(KittyOwner::<Test>::get(1), Some(1));
+		assert_eq!(KittyOwner::<Test>::get(2), Some(1));
+		let kitty = Kitties::<Test>::get(2).unwrap();
+		System::assert_has_event(mock::Event::KittyModule(Event::KittyBred(1, 2, kitty)));
+	});
 }

@@ -1,5 +1,11 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(test)]
+mod mock;
+
+#[cfg(test)]
+mod tests;
+
 pub use pallet::*;
 
 #[frame_support::pallet]
@@ -113,7 +119,8 @@ pub mod pallet {
 			// confirm the account is the owner of the kitty
 			ensure!(Self::kitty_owner(kitty_id) == Some(who.clone()), Error::<T>::NotOwner);
 			// take action to save data
-			<KittyOwner<T>>::insert(kitty_id, new_owner);
+			<KittyOwner<T>>::insert(kitty_id, new_owner.clone());
+			Self::deposit_event(Event::KittyTransferred(who, new_owner, kitty_id));
 
 			Ok(())
 		}

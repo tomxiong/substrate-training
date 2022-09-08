@@ -1,4 +1,4 @@
-use crate as pallet_poe;
+use crate as pallet_kitties;
 use frame_support::traits::{ConstU16, ConstU64};
 use frame_system as system;
 use sp_core::H256;
@@ -19,7 +19,8 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		PoeModule: pallet_poe::{Pallet, Call, Storage, Event<T>},
+		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Storage},
+		KittyModule: pallet_kitties::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
@@ -50,12 +51,19 @@ impl system::Config for Test {
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
-impl pallet_poe::Config for Test {
-	type MaxClaimLength = ConstU32<512>;
+impl pallet_kitties::Config for Test {
 	type Event = Event;
+	type Randomness = RandomnessCollectiveFlip;
 }
+
+impl pallet_randomness_collective_flip::Config for Test {}
+
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
+	let mut t = system::GenesisConfig::default().build_storage::<Test>().unwrap();
+
+	let mut ext = sp_io::TestExternalities::new(t);
+	ext.execute_with(|| System::set_block_number(1)); //设置初始块高度
+	ext
 }
