@@ -1,3 +1,30 @@
+# pallet kitty 第二课作业模块创建，包括创建kitty,繁殖，转移等功能
+抵押定为固定价格： 100
+## 截图如下：
+Create kitty
+![create_kitty](kitty_1.png "creating kitty")
+
+![created_kitty](kitty_2.png "created kitty and trigger event")
+
+![list owner_kitty](kitty_3.png "list kitties by owner")
+
+Breed kitty:
+![breed kitty](kitty_4.png "breed new kitties")
+
+![list kitty after bred](kitty_5.png "list kitties after bred new kitty")
+
+Transfer kitty:
+![transfer kitty](kitty_6.png "Alice transfer kitty to Bob")
+
+![list kitty for Bob](kitty_7.png "Bob's kitties")
+
+![list kitty for Alice](kitty_8.png "Alice's kitties")
+
+The balance change list for reserve and unreserve:
+![balance change list for reserve and unreserve](kitty_9.png "balance change list for event")
+
+
+
 # pallet poe module 存证的创建，撤销和转移以及单元测试
 用例10个，包括正常工作路径，创建时存证已存在，撤销时存证不存在，转移存证不存证，撤销和转移时非owner等异常路径，存证数据超长
 ## 截图如下
