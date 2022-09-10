@@ -12,6 +12,8 @@ fn create_kitty_works() {
 		assert!(Kitties::<Test>::contains_key(0));
 		// check owner has the kitty_id = 0
 		assert_eq!(KittyOwner::<Test>::get(0), Some(1));
+		// confirm if the total size of kitties by owner is one
+		assert_eq!(KittiesByOwner::<Test>::get(1).unwrap().len(), 1usize);
 		// check kitties has the kitty_id = 0 too
 		let kitty = Kitties::<Test>::get(0).unwrap();
 		//assert_eq!(kitty.0, [0; 16]);
@@ -30,6 +32,10 @@ fn transfer_kitty_works() {
 		assert!(Kitties::<Test>::contains_key(0));
 		// check if the second owner has the kitty_id = 0
 		assert_eq!(KittyOwner::<Test>::get(0), Some(2));
+		// check if the first woner hasn't any kitty and the second owner has one kitty after transfered
+		assert_eq!(KittiesByOwner::<Test>::get(0).unwrap().len(), 0usize);
+		assert_eq!(KittiesByOwner::<Test>::get(1).unwrap().len(), 1usize);
+
 		System::assert_has_event(mock::Event::KittyModule(Event::KittyTransferred(1, 2, 0)));		
 	});
 }

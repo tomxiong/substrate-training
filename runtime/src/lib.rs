@@ -272,10 +272,16 @@ impl pallet_poe::Config for Runtime {
 	type Event = Event;
 }
 
+parameter_types! {
+	pub const Price: u64 = 100;
+}
 impl pallet_kitties::Config for Runtime {
 	type Randomness = RandomnessCollectiveFlip;
 	type Event = Event;
 	type KittyIndex = Index;
+	type MaxKittyLength = ConstU32<512>;
+	type Currency = Balances;
+	type Price = Price;
 }
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(

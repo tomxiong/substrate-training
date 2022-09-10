@@ -1,5 +1,5 @@
 use crate as pallet_kitties;
-use frame_support::traits::{ConstU16, ConstU64};
+use frame_support::{traits::{ConstU16, ConstU64}, parameter_types};
 use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
@@ -22,6 +22,7 @@ frame_support::construct_runtime!(
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Storage},
+		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 		KittyModule: pallet_kitties::{Pallet, Call, Storage, Event<T>},
 	}
 );
@@ -53,10 +54,31 @@ impl system::Config for Test {
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
+type Balance = u64;
+impl pallet_balances::Config for Test {
+    type MaxLocks = ();
+    type MaxReserves = ();
+    type ReserveIdentifier = [u8; 8];
+    /// The type for recording an account's balance.
+    type Balance = Balance;
+    /// The ubiquitous event type.
+    type Event = Event;
+    type DustRemoval = ();
+    type ExistentialDeposit = ();
+    type AccountStore = System;
+    type WeightInfo = pallet_balances::weights::SubstrateWeight<Test>;
+}
+
+parameter_types! {
+	pub const Price: u64 = 100;
+}
 impl pallet_kitties::Config for Test {
 	type Event = Event;
 	type Randomness = RandomnessCollectiveFlip;
 	type KittyIndex = Index;
+	type MaxKittyLength = ConstU32<512>;
+	type Currency = Balances;
+	type Price = Price;
 }
 
 impl pallet_randomness_collective_flip::Config for Test {}
