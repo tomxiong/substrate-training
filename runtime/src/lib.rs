@@ -275,6 +275,7 @@ impl pallet_poe::Config for Runtime {
 impl pallet_kitties::Config for Runtime {
 	type Randomness = RandomnessCollectiveFlip;
 	type Event = Event;
+	type KittyIndex = Index;
 }
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(

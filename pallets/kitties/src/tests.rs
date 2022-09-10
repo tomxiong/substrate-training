@@ -35,6 +35,15 @@ fn transfer_kitty_works() {
 }
 
 #[test]
+fn failed_to_transfer_kitty_with_not_owner() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(KittyModule::create(Origin::signed(1)));
+		// failed to transfer kitty with invalid owner
+		assert_noop!(KittyModule::transfer(Origin::signed(2), 0, 1), Error::<Test>::NotOwner);
+	});
+}
+
+#[test]
 fn breed_kitty_works() {
 	new_test_ext().execute_with(|| {
 		// create kitty.
@@ -50,4 +59,16 @@ fn breed_kitty_works() {
 		let kitty = Kitties::<Test>::get(2).unwrap();
 		System::assert_has_event(mock::Event::KittyModule(Event::KittyBred(1, 2, kitty)));
 	});
+}
+
+#[test]
+fn failed_breed_kitty_with_invalid_kitty_id() {
+	new_test_ext().execute_with(|| {
+		// create kitty.
+		assert_ok!(KittyModule::create(Origin::signed(1)));
+		assert_ok!(KittyModule::create(Origin::signed(1)));
+		// failed with invalid kitty id 
+		assert_noop!(KittyModule::breed(Origin::signed(1), 0, 2), Error::<Test>::InvalidKittyId);
+		assert_noop!(KittyModule::breed(Origin::signed(1), 2, 1), Error::<Test>::InvalidKittyId);
+	});	
 }

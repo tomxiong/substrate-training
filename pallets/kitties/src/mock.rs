@@ -11,6 +11,8 @@ use sp_runtime::traits::ConstU32;
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
 
+pub type Index = u32;
+
 // Configure a mock runtime to test the pallet.
 frame_support::construct_runtime!(
 	pub enum Test where
@@ -54,6 +56,7 @@ impl system::Config for Test {
 impl pallet_kitties::Config for Test {
 	type Event = Event;
 	type Randomness = RandomnessCollectiveFlip;
+	type KittyIndex = Index;
 }
 
 impl pallet_randomness_collective_flip::Config for Test {}
