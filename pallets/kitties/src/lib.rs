@@ -160,8 +160,8 @@ use sp_std::prelude::*;
 			ensure!(Self::kitty_owner(kitty_id) == Some(who.clone()), Error::<T>::NotOwner);			
 			let price = T::Price::get();
 			// reserve balance with price for new owner and then unreserve for old owner
-			T::Currency::reserve(&who, price).map_err(|_| Error::<T>::NotEnoughBalance)?;
-			T::Currency::unreserve(&new_owner, price);			
+			T::Currency::reserve(&new_owner, price).map_err(|_| Error::<T>::NotEnoughBalance)?;
+			T::Currency::unreserve(&who, price);
 			// take action to save data
 			<KittyOwner<T>>::insert(kitty_id, new_owner.clone());			
 			KittiesByOwner::<T>::try_mutate(&who,|ref mut kitties|{
@@ -169,7 +169,6 @@ use sp_std::prelude::*;
 				kitties.remove(index);
 				Ok::<(), DispatchError>(())
 			})?;
-			let kitty = Self::get_kitty(kitty_id).map_err(|_| Error::<T>::InvalidKittyId)?;
 			KittiesByOwner::<T>::try_mutate(&new_owner,|ref mut kitties|{				
 				kitties.try_push(kitty_id).map_err(|_|Error::<T>::TooMuchKitties)?;
 				Ok::<(), DispatchError>(())
