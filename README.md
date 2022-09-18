@@ -1,7 +1,7 @@
 # pallet kitty 第三课作业--rust代码的单元测试和小毛孩的UI
 ## 截图如下：
 单元测试-- 11个包括 创建，繁殖，转移的正常功能，非owner，繁殖id错误，余额不足，不能拥有太多的毛孩等
-![unit tests](unit—test-result.png "The result of unit tests.")
+![unit tests](unit_test_result.png "The result of unit tests.")
 
 
 # pallet kitty 第二课作业模块创建，包括创建kitty,繁殖，转移等功能
