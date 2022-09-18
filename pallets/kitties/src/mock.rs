@@ -45,7 +45,7 @@ impl system::Config for Test {
 	type BlockHashCount = ConstU64<250>;
 	type Version = ();
 	type PalletInfo = PalletInfo;
-	type AccountData = ();
+	type AccountData = pallet_balances::AccountData<u64>;
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
@@ -76,7 +76,7 @@ impl pallet_kitties::Config for Test {
 	type Event = Event;
 	type Randomness = RandomnessCollectiveFlip;
 	type KittyIndex = Index;
-	type MaxKittyLength = ConstU32<512>;
+	type MaxKittyLength = ConstU32<4>;
 	type Currency = Balances;
 	type Price = Price;
 }
@@ -87,8 +87,10 @@ impl pallet_randomness_collective_flip::Config for Test {}
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut t = system::GenesisConfig::default().build_storage::<Test>().unwrap();
+	pallet_balances::GenesisConfig::<Test> { balances: vec![(1, 500), (2, 300), (3, 90)]}
+	.assimilate_storage(&mut t).unwrap();
 
-	let mut ext = sp_io::TestExternalities::new(t);
+	let mut ext = sp_io::TestExternalities::new(t.into());
 	ext.execute_with(|| System::set_block_number(1)); //设置初始块高度
 	ext
 }
