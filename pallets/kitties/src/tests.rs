@@ -36,7 +36,7 @@ fn create_kitty_failed_with_too_much_kitties() {
 		assert_ok!(KittyModule::create(Origin::signed(1)));
 		assert_ok!(KittyModule::create(Origin::signed(1)));
 		assert_ok!(KittyModule::create(Origin::signed(1)));		
-		assert_err!(KittyModule::create(Origin::signed(1)), Error::<Test>::TooMuchKitties);
+		assert_noop!(KittyModule::create(Origin::signed(1)), Error::<Test>::TooMuchKitties);
 	});
 }
 
@@ -86,7 +86,7 @@ fn failed_to_transfer_kitty_with_too_much_kitties() {
 		assert_ok!(KittyModule::create(Origin::signed(1)));
 		assert_ok!(KittyModule::create(Origin::signed(1)));
 		// failed to transfer kitty with owner 1 has too many kitties
-		assert_err!(KittyModule::transfer(Origin::signed(2), 0, 1), Error::<Test>::TooMuchKitties);
+		assert_noop!(KittyModule::transfer(Origin::signed(2), 0, 1), Error::<Test>::TooMuchKitties);
 	});
 }
 
