@@ -1,3 +1,12 @@
+# 第四课作业 -- Offchain Indexing从链上写入数据至Offchain Storeage
+1. Offchain Indexing从链上写入数据至Offchain Storeage
+代码：https://github.com/tomxiong/substrate-training/tree/fifth_exercise/pallets/template/src/lib.rs
+2. 使用 js sdk 从浏览器 frontend 获取到前面写入 Offchain Storage 的数据、
+在pallet-template 中增加storeToOffchainStorage的extrinsic，使用offchain worker读出后调用do_something提交交易至链上，重用template的界面显示数据
+代码：https://github.com/tomxiong/advance-5 中template界面
+![lession-4](lession-4.png "offchain lession") 
+
+
 # pallet kitty 第三课作业--rust代码的单元测试
 ## 截图如下：
 单元测试-- 11个包括 创建，繁殖，转移的正常功能，非owner，繁殖id错误，余额不足，不能拥有太多的毛孩等

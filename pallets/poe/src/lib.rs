@@ -1,18 +1,22 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub use pallet::*;
+
 #[cfg(test)]
 mod mock;
 
 #[cfg(test)]
 mod tests;
 
-pub use pallet::*;
-
 #[frame_support::pallet]
 pub mod pallet{
+	use super::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 	use sp_std::prelude::*;
+	use frame_system::{
+		self as system
+	};
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
@@ -24,6 +28,16 @@ pub mod pallet{
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
+
+	#[pallet::hooks]
+	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+
+		fn offchain_worker(block_number: T::BlockNumber) {
+			log::info!("Hello world from offchain workers!");
+			let parent_hash = <system::Pallet<T>>::block_hash(block_number - 1u32.into());
+			log::info!("current block: {:?} parent hash: {:?}", block_number, parent_hash);
+		}
+	}
 
 	#[pallet::storage]
 	pub type Proofs<T: Config> = StorageMap<
@@ -47,9 +61,6 @@ pub mod pallet{
 		ClaimNotExist,
 		NotClaimOwner,
 	}
-
-	#[pallet::hooks]
-	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
 
 	#[pallet::call]
 	impl<T :Config> Pallet<T> {

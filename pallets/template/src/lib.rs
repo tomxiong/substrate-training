@@ -14,20 +14,71 @@ mod tests;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
+use sp_core::crypto::KeyTypeId;
+
+const KEY_TYPE: KeyTypeId = KeyTypeId(*b"ocwd");
+
+pub mod crypto {
+    use super::KEY_TYPE;
+    use sp_core::sr25519::Signature as Sr25519Signature;
+    use sp_runtime::{
+        app_crypto::{app_crypto, sr25519},
+        traits::Verify,
+        MultiSignature, MultiSigner,
+    };
+    app_crypto!(sr25519, KEY_TYPE);
+
+    pub struct OcwAuthId;
+
+    impl frame_system::offchain::AppCrypto<MultiSigner, MultiSignature> for OcwAuthId {
+        type RuntimeAppPublic = Public;
+        type GenericSignature = sp_core::sr25519::Signature;
+        type GenericPublic = sp_core::sr25519::Public;
+    }
+
+    impl frame_system::offchain::AppCrypto<<Sr25519Signature as Verify>::Signer, Sr25519Signature>
+        for OcwAuthId
+        {
+            type RuntimeAppPublic = Public;
+            type GenericSignature = sp_core::sr25519::Signature;
+            type GenericPublic = sp_core::sr25519::Public;
+        }
+}
+
+
 #[frame_support::pallet]
 pub mod pallet {
+	use super::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
+    use sp_std::vec::Vec;
+	use sp_io::offchain_index;
+	use sp_runtime::offchain::storage::StorageValueRef;
+	use scale_info::prelude::string::String;   
+	
+	use frame_system::{
+		offchain::{
+			AppCrypto, CreateSignedTransaction, SendSignedTransaction,
+			Signer,
+		},
+	};
 
+	const ONCHAIN_TX_KEY: &[u8] = b"template_pallet::indexing1";
+
+	#[derive(Debug, Encode, Decode, Default)]
+	struct IndexingData(Vec<u8>, u32);
+	
+	
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
+	pub trait Config: frame_system::Config + CreateSignedTransaction<Call<Self>> {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type AuthorityId: AppCrypto<Self::Public, Self::Signature>;
 	}
 
 	// The pallet's runtime storage items.
@@ -98,5 +149,92 @@ pub mod pallet {
 				},
 			}
 		}
+
+		#[pallet::weight(0)]
+        pub fn submit_data(origin: OriginFor<T>, payload: Vec<u8>) -> DispatchResultWithPostInfo {
+
+            let _who = ensure_signed(origin)?;
+
+            log::info!("in submit_data call: {:?}", payload);
+
+            Ok(().into())
+        }
+
+		#[pallet::weight(100)]
+		pub fn store_to_offchain_storage(origin: OriginFor<T>, number: u32) -> DispatchResult {
+
+			let _who = ensure_signed(origin)?;
+
+			let key = Self::derived_key(frame_system::Module::<T>::block_number());
+			
+			let data = IndexingData(ONCHAIN_TX_KEY.to_vec(), number);
+			
+
+			offchain_index::set(&key, &data.encode());
+
+			log::info!("--------current block: {:?} and store number: {:?} with key {:?}", frame_system::Module::<T>::block_number(), number, key);
+
+			Ok(())
+		}
+	}
+
+	#[pallet::hooks]
+	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+
+		fn offchain_worker(block_number: T::BlockNumber) {
+			log::info!("Hello world from offchain workers!");
+			//let parent_hash = <system::Pallet<T>>::block_hash(block_number - 1u32.into());
+			log::info!("Offchain work current block: {:?} ", block_number);
+			let key = Self::derived_key(block_number);
+			let storage_ref = StorageValueRef::persistent(&key);
+			log::info!("-----try to read local storage data by key: {:?}, {:?}", key, block_number);
+			if let Ok(Some(data)) = storage_ref.get::<IndexingData>() {
+				
+				let timeout = sp_io::offchain::timestamp()
+					.add(sp_runtime::offchain::Duration::from_millis(8000));
+				sp_io::offchain::sleep_until(timeout);
+
+				log::info!("local storage data: {:?}, {:?}", String::from_utf8(data.0).unwrap(), data.1);
+				_ = Self::trigger_signed_transaction(data.1);
+			} else {
+				log::info!("Error reading from local storage.");
+			}
+		}
+	}
+
+	impl<T: Config> Pallet<T> {
+
+		fn trigger_signed_transaction(payload:u32) -> Result<(), &'static str> {
+            let signer = Signer::<T, T::AuthorityId>::all_accounts();
+            if !signer.can_sign() {
+                return Err(
+                    "No local accounts available. Consider adding one via `author_insertKey` RPC.",
+                    )
+            }
+
+            let results = signer.send_signed_transaction(|_account| {
+                Call::do_something { something: payload.clone() }
+            });
+
+            for (acc, res) in &results {
+                match res {
+                    Ok(()) => log::info!("[{:?}] Submitted data:{:?}", acc.id, payload),
+                    Err(e) => log::error!("[{:?}] Failed to submit transaction: {:?}", acc.id, e),
+                }
+            }
+
+            Ok(())
+        }
+
+		fn derived_key(block_number: T::BlockNumber) -> Vec<u8> {
+			block_number.using_encoded(|encoded_bn| {
+				ONCHAIN_TX_KEY.clone().into_iter()
+					.chain(b"/".into_iter())
+					.chain(encoded_bn)
+					.copied()
+					.collect::<Vec<u8>>()
+			})
+		}
+
 	}
 }
