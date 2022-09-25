@@ -29,6 +29,7 @@ pub mod pallet{
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
+	/*
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 
@@ -38,6 +39,7 @@ pub mod pallet{
 			log::info!("current block: {:?} parent hash: {:?}", block_number, parent_hash);
 		}
 	}
+	*/
 
 	#[pallet::storage]
 	pub type Proofs<T: Config> = StorageMap<

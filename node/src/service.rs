@@ -206,12 +206,18 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 		})?;
 
 	if config.offchain_worker.enabled {
+		let keystore = keystore_container.sync_keystore();
+        sp_keystore::SyncCryptoStore::sr25519_generate_new(
+            &*keystore,
+            node_template_runtime::pallet_template::KEY_TYPE,
+            Some("//Alice"),
+            ).expect("Creating key with account Alice should succeed.");
 		sc_service::build_offchain_workers(
 			&config,
 			task_manager.spawn_handle(),
 			client.clone(),
 			network.clone(),
-		);
+		);			
 	}
 
 	let role = config.role.clone();

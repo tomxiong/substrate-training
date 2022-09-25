@@ -16,7 +16,7 @@ mod benchmarking;
 
 use sp_core::crypto::KeyTypeId;
 
-const KEY_TYPE: KeyTypeId = KeyTypeId(*b"ocwd");
+pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"ocwd");
 
 pub mod crypto {
     use super::KEY_TYPE;
@@ -115,12 +115,13 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		/// An example dispatchable that takes a singles value as a parameter, writes the value to
 		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(0)]
 		pub fn do_something(origin: OriginFor<T>, something: u32) -> DispatchResult {
 			// Check that the extrinsic was signed and get the signer.
 			// This function will return an error if the extrinsic is not signed.
 			// https://docs.substrate.io/main-docs/build/origins/
 			let who = ensure_signed(origin)?;
+			log::info!("---origin : {:?} and something ： {:?}", who, something);
 
 			// Update storage.
 			<Something<T>>::put(something);
@@ -132,7 +133,7 @@ pub mod pallet {
 		}
 
 		/// An example dispatchable that may throw a custom error.
-		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1))]
+		#[pallet::weight(100 + T::DbWeight::get().reads_writes(1,1))]
 		pub fn cause_error(origin: OriginFor<T>) -> DispatchResult {
 			let _who = ensure_signed(origin)?;
 
@@ -187,14 +188,14 @@ pub mod pallet {
 			log::info!("Offchain work current block: {:?} ", block_number);
 			let key = Self::derived_key(block_number);
 			let storage_ref = StorageValueRef::persistent(&key);
-			log::info!("-----try to read local storage data by key: {:?}, {:?}", key, block_number);
-			if let Ok(Some(data)) = storage_ref.get::<IndexingData>() {
-				
-				let timeout = sp_io::offchain::timestamp()
+			/*
+			let timeout = sp_io::offchain::timestamp()
 					.add(sp_runtime::offchain::Duration::from_millis(8000));
 				sp_io::offchain::sleep_until(timeout);
-
-				log::info!("local storage data: {:?}, {:?}", String::from_utf8(data.0).unwrap(), data.1);
+			*/
+			log::info!("-----try to read local storage data by key: {:?}, {:?}", key, block_number);
+			if let Ok(Some(data)) = storage_ref.get::<IndexingData>() {
+				log::info!("----local storage data: {:?}, {:?}", String::from_utf8(data.0).unwrap(), data.1);
 				_ = Self::trigger_signed_transaction(data.1);
 			} else {
 				log::info!("Error reading from local storage.");
@@ -205,14 +206,16 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 
 		fn trigger_signed_transaction(payload:u32) -> Result<(), &'static str> {
+			log::info!("---try to send tx for payload {:?}", payload);
             let signer = Signer::<T, T::AuthorityId>::all_accounts();
             if !signer.can_sign() {
+				log::info!("---Failed try to send tx for payload {:?} with signer {:?}", payload, signer.can_sign());
                 return Err(
                     "No local accounts available. Consider adding one via `author_insertKey` RPC.",
                     )
             }
-
-            let results = signer.send_signed_transaction(|_account| {
+			log::info!("---try to send tx for payload {:?} with signer {:?}", payload, signer.can_sign());
+            let results = signer.send_signed_transaction(|_account| {				
                 Call::do_something { something: payload.clone() }
             });
 
