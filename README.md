@@ -1,3 +1,16 @@
+# 第六课作业 -- 
+## -为 proof of existence (poe) 模块的可调用函数 create_claim, revoke_claim, transfer_claim 添加 benchmark 用例，并且将 benchmark 运行的结果应用在可调用函数上；
+```
+./pallets/poe/pallets/poe/src/benchmarking.rs
+./pallets/poe/pallets/poe/src/lib.rs
+```
+
+## -选择 node-template 或者其它节点程序，生成 Chain Spec 文件（两种格式都需要）；
+```
+./tomxiong-staging.json
+./tomxiong-staging-raw.json
+```
+
 # 第四课作业 -- Offchain Indexing从链上写入数据至Offchain Storeage
 1. Offchain Indexing从链上写入数据至Offchain Storeage
 代码：https://github.com/tomxiong/substrate-training/tree/fifth_exercise/pallets/template/src/lib.rs
